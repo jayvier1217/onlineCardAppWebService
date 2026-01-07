@@ -24,11 +24,14 @@ app.listen( port, () => {
 app.get("/allcards", async (req, res) => {
     try {
         let connection = await mysql.createConnection(dbConfig);
-        const [rows] = await connection.execute('SELECT * FROM defaultdb.cards');
+        const [rows] = await connection.execute('SELECT * FROM cards');
         res.json(rows);
     } catch (err) {
         console.log(err);
         res.status(500).send('Server error for all cards.');
     }
+});
 
-})
+app.get("/test", (req, res) => {
+    res.send("Server is responding!");
+});
