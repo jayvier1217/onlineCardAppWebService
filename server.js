@@ -61,15 +61,22 @@ app.put('/updatecard/:id', async (req, res) => {
     }
 });
 
-// Example Route: Delete a card
 app.delete('/deletecard/:id', async (req, res) => {
     const { id } = req.params;
-    try{
-        let connection = await mysql.createConnection(dbConfig);
-        await connection.execute('DELETE FROM cards WHERE id=?', [id]);
-        res.status(201).json({ message: 'Card ' + id + ' deleted successfully!' });
+    let connection;
+    try {
+        connection = await mysql.createConnection(dbConfig);
+        const [result] = await connection.execute('DELETE FROM cards WHERE id=?', [id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Card not found' });
+        }
+
+        res.status(200).json({ message: 'Card ' + id + ' deleted successfully!' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error - could not delete card ' + id });
+    } finally {
+        if (connection) await connection.end();
     }
 });
