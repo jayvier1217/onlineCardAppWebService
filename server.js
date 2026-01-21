@@ -21,10 +21,21 @@ app.listen( port, () => {
     console.log(`Server running on port: ${port}`);
 });
 
+const pool = mysql.createPool(dbConfig);
+
+const logPoolStatus = () => {
+    // _allConnections contains the list of active/idle connections
+    const total = pool.pool._allConnections.length;
+    const free = pool.pool._freeConnections.length;
+    const active = total - free;
+    console.log(`[DB Pool] Active: ${active} | Idle: ${free} | Total: ${total}/100`);
+};
+
+
 app.get("/allcards", async (req, res) => {
     try {
-        let connection = await mysql.createConnection(dbConfig);
-        const [rows] = await connection.execute('SELECT * FROM defaultdb.cards');
+        const [rows] = await pool.execute('SELECT * FROM defaultdb.cards');
+        logPoolStatus();
         res.json(rows);
     } catch (err) {
         console.log(err);
@@ -39,6 +50,7 @@ app.get("/", (req, res) => {
 app.post('/addcard', async (req, res) => {
     const { card_name, card_pic} = req.body;
     try {
+        // const [rows] = await pool.execute('INSERT INTO cards (card_name, card_pic) VALUES (?, ?)', [card_name, card_pic])
         let connection = await mysql.createConnection(dbConfig);
         await connection.execute('INSERT INTO cards (card_name, card_pic) VALUES (?, ?)', [card_name, card_pic]);
         res.status(201).json({message: `card ${card_name} added successfully.`});
